@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option csharp_namespace = "DiscountApi";
+
+package discount;
+
+service Discount{
+	rpc GetDiscount (DiscountRequest) returns (NullableResponse);
+}
+
+message DiscountRequest {
+	int32 id = 1;
+}
+
+message DiscountReply {
+	string fixedPrice = 1;
+	string percentage = 2;
+}
+
+message NullableResponse
+{
+    DiscountReply result = 1;
+}

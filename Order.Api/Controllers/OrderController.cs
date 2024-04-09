@@ -19,7 +19,7 @@ namespace OrderApi.Controllers
         public async Task<IActionResult> CreateOrder([FromBody] CreateProductDto dto)
         {
             var data = await _orderService.CreateOrderAsync(dto.Id);
-            return Content(data.ToString());
+            return Ok(data);
         }
     }
 }

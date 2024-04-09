@@ -23,6 +23,11 @@ namespace OrderApi.Services
             _discountClient = discountClient;
         }
 
+        public Task<Order> CreateOrderAsync(int productId)
+        {
+            throw new NotImplementedException();
+        }
+
         //public async Task<Order> CreateOrderAsync(int productId)
         //{
         //    var productReply = await _productClient.GetProductAsync(new ProductRequest { Id = productId });

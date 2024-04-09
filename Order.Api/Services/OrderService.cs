@@ -23,41 +23,36 @@ namespace OrderApi.Services
             _discountClient = discountClient;
         }
 
-        public Task<Order> CreateOrderAsync(int productId)
+        public async Task<Order> CreateOrderAsync(int productId)
         {
-            throw new NotImplementedException();
+            var productReply = await _productClient.GetProductAsync(new ProductRequest { Id = productId });
+            if (productReply.Result == null)
+            {
+                throw new NotFoundException();
+            }
+
+            var discountReply = await _discountClient.GetDiscountAsync(new DiscountRequest { Id = productId });
+            decimal productPrice = Convert.ToDecimal(productReply.Result.Price);
+            decimal totalPrice = productPrice;
+
+            if (discountReply.Result != null)
+            {
+                decimal discountFixedPrice = Convert.ToDecimal(discountReply.Result.FixedPrice);
+                decimal discountPercentage = int.Parse(discountReply.Result.Percentage);
+
+                if (discountFixedPrice != 0)
+                    totalPrice = productPrice - discountFixedPrice;
+                else
+                    totalPrice = productPrice - (productPrice * discountPercentage / 100);
+            }
+
+            await _hubContext.Clients.Group($"product{productId}Group").SendAsync("ReceiveNotification", productId, productReply.Result.Name, totalPrice);
+
+            Order order = new() { Price = totalPrice, ProductId = productId };
+            _dbContext.Orders.Add(order);
+            await _dbContext.SaveChangesAsync();
+
+            return order;
         }
-
-        //public async Task<Order> CreateOrderAsync(int productId)
-        //{
-        //    var productReply = await _productClient.GetProductAsync(new ProductRequest { Id = productId });
-        //    if (productReply.Result == null)
-        //    {
-        //        throw new NotFoundException();
-        //    }
-
-        //    var discountReply = await _discountClient.GetDiscountAsync(new DiscountRequest { Id = productId });
-        //    decimal productPrice = Convert.ToDecimal(productReply.Result.Price);
-        //    decimal totalPrice = productPrice;
-
-        //    if (discountReply.Result != null)
-        //    {
-        //        decimal discountFixedPrice = Convert.ToDecimal(discountReply.Result.FixedPrice);
-        //        decimal discountPercentage = int.Parse(discountReply.Result.Percentage);
-
-        //        if (discountFixedPrice != 0)
-        //            totalPrice = productPrice - discountFixedPrice;
-        //        else
-        //            totalPrice = productPrice - (productPrice * discountPercentage / 100);
-        //    }
-
-        //    await _hubContext.Clients.Group($"product{productId}Group").SendAsync("ReceiveNotification", productId, productReply.Result.Name, totalPrice);
-
-        //    Order order = new() { Price = totalPrice, ProductId = productId };
-        //    _dbContext.Orders.Add(order);
-        //    await _dbContext.SaveChangesAsync();
-
-        //    return order;
-        //}
     }
 }
